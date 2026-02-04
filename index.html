@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИИ в Образовании</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --accent-color: #38bdf8;
+            --text-color: #f8fafc;
+            --btn-hover: #0ea5e9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg-gradient); color: var(--text-color); overflow: hidden; }
+
+        .presentation-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        section {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        
+        section.visible .fade-in { opacity: 1; transform: translateY(0); }
+
+        h1 {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: -webkit-linear-gradient(#38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 { font-size: 2.5rem; margin-bottom: 2rem; color: var(--accent-color); }
+        p { font-size: 1.2rem; max-width: 800px; text-align: center; line-height: 1.6; margin-bottom: 2rem; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1300px;
+        }
+
+        /* --- КАРТОЧКИ --- */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, background 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .click-hint {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            border: 1px solid white;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .card h3 { margin-bottom: 0.5rem; color: #fbbf24; }
+        .card span {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.2);
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+            font-size: 2rem;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid var(--accent-color);
+            padding: 2.5rem;
+            border-radius: 20px;
+            max-width: 650px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+        .close-btn:hover { color: white; }
+
+        .modal-title { color: #fbbf24; font-size: 2rem; margin-bottom: 1rem; padding-right: 30px; }
+        
+        .modal-text { 
+            font-size: 1.1rem; 
+            line-height: 1.6; 
+            color: #e2e8f0; 
+            margin-bottom: 2rem; 
+        }
+        .modal-text ul { margin-left: 20px; margin-bottom: 10px; }
+        .modal-text li { margin-bottom: 5px; }
+        .modal-text strong { color: var(--accent-color); }
+
+        .modal-link-btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #0f172a;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+            align-self: flex-start;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .modal-link-btn:hover {
+            background-color: var(--btn-hover);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 1.8rem; }
+            section { padding: 1rem; }
+            .grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 1.5rem; }
+            .modal-link-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title" id="modalTitle">Заголовок</h2>
+            <div class="modal-text" id="modalText">Текст инструкции...</div>
+            <a href="#" target="_blank" id="modalLink" class="modal-link-btn">Перейти на сайт ↗</a>
+        </div>
+    </div>
+
+    <main class="presentation-container">
+        
+        <section>
+            <div class="fade-in">
+                <h1>ИИ в учебном процессе</h1>
+                <p>Кликабельная презентация с инструкциями и ссылками.</p>
+                <div style="margin-top: 20px; font-weight: bold;">Листайте вниз ↓</div>
+            </div>
+            <div class="scroll-indicator">⇩</div>
+        </section>
+
+        <section>
+            <div class="fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <h2>✍️ Работа с текстом</h2>
+                <div class="grid">
+                    <div class="card" onclick="openModal('chatgpt')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>ChatGPT (OpenAI)</h3>
+                        <span>Текст & Код</span>
+                        <p>Идеален для создания планов уроков и проверки эссе.</p>
+                    </div>
+                    <div class="card" onclick="openModal('gemini')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Gemini (Google)</h3>
+                        <span>Поиск & Анализ</span>
+                        <p>Отлично ищет актуальную информацию.</p>
+                    </div>
+                    <div class="card" onclick="openModal('claude')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Claude</h3>
+                        <span>Креатив</span>
+                        <p>Пишет более "человечные" тексты.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <h2>🎨 Медиа и Визуал</h2>
+                <div class="grid">
+                    <div class="card" onclick="openModal('gamma')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Gamma App</h3>
+                        <span>Презентации</span>
+                        <p>Генерирует готовые слайды за минуту.</p>
+                    </div>
+                    
+                    <div class="card" onclick="openModal('elevenlabs')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>ElevenLabs</h3>
+                        <span>Озвучка (Audio)</span>
+                        <p>Превращает любой текст в реалистичную речь.</p>
+                    </div>
+
+                    <div class="card" onclick="openModal('bing')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Bing Image</h3>
+                        <span>DALL-E 3</span>
+                        <p>Фотореалистичные изображения высокого качества.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="fade-in" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <h2>🧠 Тесты и Исследования</h2>
+                <div class="grid">
+                    <div class="card" onclick="openModal('perplexity')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Perplexity</h3>
+                        <span>Умный поиск</span>
+                        <p>Поисковик с прямыми ответами и ссылками.</p>
+                    </div>
+                    <div class="card" onclick="openModal('quizizz')">
+                        <div class="click-hint">Инструкция 👆</div>
+                        <h3>Quizizz AI</h3>
+                        <span>Геймификация</span>
+                        <p>Автоматически создает викторины из текста.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="fade-in">
+                <h2>Итог</h2>
+                <p>Используйте эти инструкции, чтобы сэкономить время уже сегодня.</p>
+                <div class="card" style="margin-top: 2rem; text-align: center; cursor: default;">
+                    <h3>Спасибо за внимание!</h3>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const instructions = {
+            'chatgpt': {
+                title: 'ChatGPT (OpenAI)',
+                url: 'https://chat.openai.com',
+                text: `
+                    <strong>Основные задачи:</strong>
+                    <ul>
+                        <li>Создание планов уроков.</li>
+                        <li>Проверка эссе и поиск ошибок.</li>
+                        <li>Адаптация сложного текста для детей.</li>
+                    </ul>
+                    <br>
+                    <strong>Пример промпта:</strong><br>
+                    "Составь тест из 5 вопросов с вариантами ответов по теме 'Круговорот воды' для 5 класса."
+                `
+            },
+            'gemini': {
+                title: 'Gemini (Google)',
+                url: 'https://gemini.google.com',
+                text: `
+                    <strong>Преимущества:</strong><br>
+                    Интеграция с Google Docs, Gmail и доступ к свежей информации из интернета.<br><br>
+                    <strong>Как использовать:</strong>
+                    <ul>
+                        <li>Спросите актуальные новости или научные факты.</li>
+                        <li>Нажмите кнопку "Export to Docs", чтобы сохранить ответ сразу в документ.</li>
+                        <li>Используйте для фактчекинга (проверки фактов).</li>
+                    </ul>
+                `
+            },
+            'claude': {
+                title: 'Claude AI',
+                url: 'https://claude.ai',
+                text: `
+                    <strong>Работа с файлами:</strong><br>
+                    Claude умеет читать большие книги и PDF.<br><br>
+                    <strong>Инструкция:</strong><br>
+                    1. Нажмите на скрепку 📎 и загрузите методичку или статью.<br>
+                    2. Попросите: "Сделай краткое резюме" или "Составь глоссарий терминов из этого текста".
+                `
+            },
+            'gamma': {
+                title: 'Gamma App',
+                url: 'https://gamma.app',
+                text: `
+                    <strong>Генерация презентаций:</strong><br>
+                    Самый быстрый способ создать слайды.<br><br>
+                    <strong>Инструкция:</strong><br>
+                    1. Нажмите "Create New" -> "Generate".<br>
+                    2. Введите тему урока.<br>
+                    3. Выберите дизайн.<br>
+                    4. Через минуту скачайте как PDF или PowerPoint.
+                `
+            },
+            'elevenlabs': {
+                title: 'ElevenLabs',
+                url: 'https://elevenlabs.io',
+                text: `
+                    <strong>Озвучка текста (Text-to-Speech):</strong><br>
+                    Самый реалистичный генератор голоса. Позволяет озвучивать учебные материалы, создавать аудиокниги или озвучку для видео.<br><br>
+                    <strong>Как использовать:</strong>
+                    <ul>
+                        <li>Зарегистрируйтесь (есть бесплатный тариф).</li>
+                        <li>Вставьте текст лекции или задания.</li>
+                        <li>Выберите голос (например, 'Adam' или 'Rachel').</li>
+                        <li>Нажмите "Generate" и скачайте MP3 файл.</li>
+                    </ul>
+                    <br>
+                    <strong>Фишка:</strong> Поддерживает русский язык с правильными интонациями.
+                `
+            },
+            'bing': {
+                title: 'Bing Image Creator',
+                url: 'https://www.bing.com/images/create',
+                text: `
+                    <strong>DALL-E 3 бесплатно:</strong><br>
+                    Создает очень качественные изображения.<br><br>
+                    <strong>Важно:</strong><br>
+                    Нужен аккаунт Microsoft. Вы получаете 15 быстрых генераций в день, далее скорость снижается, но инструмент остается бесплатным.
+                `
+            },
+            'perplexity': {
+                title: 'Perplexity AI',
+                url: 'https://www.perplexity.ai',
+                text: `
+                    <strong>Умный поиск:</strong><br>
+                    Это не просто чат-бот, это поисковик.<br><br>
+                    <strong>Зачем нужен:</strong><br>
+                    В отличие от ChatGPT, он всегда дает <strong>ссылки на источники</strong> [1], [2]. Идеален для подготовки научных докладов, где важна достоверность.
+                `
+            },
+            'quizizz': {
+                title: 'Quizizz AI',
+                url: 'https://quizizz.com',
+                text: `
+                    <strong>Что это?</strong><br>
+                    Умный помощник, который создает тесты из видео, текстов и файлов за секунды.<br><br>
+                    <strong>🔥 Киллер-фичи:</strong>
+                    <ul>
+                        <li><strong>Из YouTube:</strong> Вставьте ссылку на видео — ИИ проанализирует звук и сделает вопросы.</li>
+                        <li><strong>Из файла:</strong> Загрузите PDF учебника — получите тест по параграфу.</li>
+                        <li><strong>Адаптация:</strong> ИИ может упростить сложные вопросы для 5 класса или усложнить для 11-го.</li>
+                    </ul>
+                    <br>
+                    <strong>Как запустить:</strong><br>
+                    1. Нажмите "Create" -> "Assessment" -> "Generate with AI".<br>
+                    2. Выберите источник (ссылка/файл).<br>
+                    3. Отредактируйте вопросы и запустите как игру на уроке!
+                `
+            }
+        };
+
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalText = document.getElementById('modalText');
+        const modalLink = document.getElementById('modalLink');
+
+        function openModal(toolId) {
+            const data = instructions[toolId];
+            if (data) {
+                modalTitle.textContent = data.title;
+                modalText.innerHTML = data.text;
+                modalLink.href = data.url;
+                modal.classList.add('active');
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
