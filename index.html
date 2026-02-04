@@ -7,9 +7,8 @@
     <style>
         /* --- БАЗОВЫЕ СТИЛИ --- */
         :root {
-            /* Градиент оставим как "запасной" вариант, если видео не загрузится */
             --bg-fallback: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --card-bg: rgba(15, 23, 42, 0.6); /* Сделали карточки темнее для контраста */
+            --card-bg: rgba(15, 23, 42, 0.6);
             --accent-color: #38bdf8;
             --text-color: #f8fafc;
             --btn-hover: #0ea5e9;
@@ -23,6 +22,49 @@
             overflow: hidden; 
         }
 
+        /* --- ПРЕЛОУДЕР (ЗАГРУЗЧИК) --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a; /* Плотный темный фон */
+            z-index: 9999; /* Поверх всего */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.8s ease, visibility 0.8s; /* Плавное исчезновение */
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(56, 189, 248, 0.2);
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+
+        .loading-text {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Класс для скрытия прелоудера */
+        body.loaded #preloader {
+            opacity: 0;
+            visibility: hidden;
+        }
+
         /* --- ВИДЕО ФОН --- */
         .video-bg {
             position: fixed;
@@ -30,20 +72,19 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Растягивает видео без искажений */
-            z-index: -2; /* Самый нижний слой */
+            object-fit: cover;
+            z-index: -2;
         }
 
-        /* --- ЗАТЕМНЕНИЕ (OVERLAY) --- */
         .overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.75); /* Синее затемнение 75% */
-            z-index: -1; /* Слой между видео и контентом */
-            backdrop-filter: blur(3px); /* Легкое размытие видео для фокуса на тексте */
+            background: rgba(15, 23, 42, 0.75);
+            z-index: -1;
+            backdrop-filter: blur(3px);
         }
 
         .presentation-container {
@@ -52,7 +93,7 @@
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
             position: relative;
-            z-index: 1; /* Контент выше фона */
+            z-index: 1;
         }
 
         section {
@@ -82,7 +123,7 @@
             background: -webkit-linear-gradient(#38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(56, 189, 248, 0.3); /* Подсветка текста */
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
         }
         h2 { font-size: 2.5rem; margin-bottom: 2rem; color: var(--accent-color); text-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
         p { font-size: 1.2rem; max-width: 800px; text-align: center; line-height: 1.6; margin-bottom: 2rem; }
@@ -98,7 +139,7 @@
         /* --- КАРТОЧКИ --- */
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(15px); /* Сильное размытие фона под карточкой */
+            backdrop-filter: blur(15px);
             padding: 2rem;
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -112,7 +153,7 @@
             transform: translateY(-10px);
             background: rgba(56, 189, 248, 0.15);
             border-color: var(--accent-color);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); /* Свечение при наведении */
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
         }
 
         .click-hint {
@@ -250,6 +291,11 @@
 </head>
 <body>
 
+    <div id="preloader">
+        <div class="spinner"></div>
+        <div class="loading-text">ЗАГРУЗКА...</div>
+    </div>
+
     <video autoplay muted loop playsinline class="video-bg">
         <source src="321.mp4" type="video/mp4">
         Ваш браузер не поддерживает видео.
@@ -272,7 +318,7 @@
             <div class="fade-in">
                 <h1>ИИ в учебном процессе</h1>
                 <p>Кликабельная презентация с инструкциями и ссылками.</p>
-                </div>
+            </div>
             <div class="scroll-indicator">⇩</div>
         </section>
 
@@ -369,6 +415,15 @@
     </main>
 
     <script>
+        /* СКРИПТ ПРЕЛОУДЕРА */
+        window.addEventListener('load', () => {
+            // Ждем полной загрузки страницы, включая видео и картинки
+            const preloader = document.getElementById('preloader');
+            // Добавляем класс, который запускает CSS-анимацию исчезновения
+            document.body.classList.add('loaded');
+        });
+
+        /* ДАННЫЕ ИНСТРУКЦИЙ */
         const instructions = {
             'chatgpt': {
                 title: 'ChatGPT (OpenAI)',
@@ -534,4 +589,3 @@
     </script>
 </body>
 </html>
-
