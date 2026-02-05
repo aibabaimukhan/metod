@@ -19,23 +19,23 @@
         body { 
             background: var(--bg-fallback); 
             color: var(--text-color); 
-            overflow: hidden; 
+            overflow-x: hidden; /* Убираем горизонтальный скролл */
         }
 
-        /* --- ПРЕЛОУДЕР (ЗАГРУЗЧИК) --- */
+        /* --- ПРЕЛОУДЕР --- */
         #preloader {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #0f172a; /* Плотный темный фон */
-            z-index: 9999; /* Поверх всего */
+            background: #0f172a;
+            z-index: 9999;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            transition: opacity 0.8s ease, visibility 0.8s; /* Плавное исчезновение */
+            transition: opacity 0.8s ease, visibility 0.8s;
         }
 
         .spinner {
@@ -59,7 +59,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        /* Класс для скрытия прелоудера */
         body.loaded #preloader {
             opacity: 0;
             visibility: hidden;
@@ -87,10 +86,11 @@
             backdrop-filter: blur(3px);
         }
 
+        /* --- КОНТЕЙНЕР ПРЕЗЕНТАЦИИ --- */
         .presentation-container {
             height: 100vh;
             overflow-y: scroll;
-            scroll-snap-type: y mandatory;
+            scroll-snap-type: y mandatory; /* Слайды "прилипают" */
             scroll-behavior: smooth;
             position: relative;
             z-index: 1;
@@ -108,6 +108,7 @@
             position: relative;
         }
 
+        /* Анимация появления */
         .fade-in {
             opacity: 0;
             transform: translateY(20px);
@@ -116,6 +117,7 @@
         
         section.visible .fade-in { opacity: 1; transform: translateY(0); }
 
+        /* Типографика */
         h1 {
             font-size: 4rem;
             text-align: center;
@@ -124,10 +126,12 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+            padding: 0 10px; /* Чтобы не прилипало к краям на моб */
         }
-        h2 { font-size: 2.5rem; margin-bottom: 2rem; color: var(--accent-color); text-shadow: 0 0 20px rgba(56, 189, 248, 0.2); }
-        p { font-size: 1.2rem; max-width: 800px; text-align: center; line-height: 1.6; margin-bottom: 2rem; }
+        h2 { font-size: 2.5rem; margin-bottom: 2rem; color: var(--accent-color); text-shadow: 0 0 20px rgba(56, 189, 248, 0.2); text-align: center; }
+        p { font-size: 1.2rem; max-width: 800px; text-align: center; line-height: 1.6; margin-bottom: 2rem; padding: 0 1rem; }
 
+        /* СЕТКА (GRID) */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -160,7 +164,7 @@
             position: absolute;
             top: 10px;
             right: 15px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             opacity: 0.7;
             border: 1px solid rgba(255,255,255,0.3);
             padding: 2px 8px;
@@ -210,10 +214,7 @@
             backdrop-filter: blur(8px);
         }
 
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
 
         .modal-content {
             background: #1e293b;
@@ -222,8 +223,8 @@
             border-radius: 20px;
             max-width: 650px;
             width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
+            max-height: 85vh; /* Ограничение высоты для маленьких экранов */
+            overflow-y: auto; /* Скролл внутри окна */
             position: relative;
             transform: scale(0.8);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -232,9 +233,7 @@
             flex-direction: column;
         }
 
-        .modal-overlay.active .modal-content {
-            transform: scale(1);
-        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
 
         .close-btn {
             position: absolute;
@@ -248,7 +247,7 @@
         }
         .close-btn:hover { color: white; }
 
-        .modal-title { color: #fbbf24; font-size: 2rem; margin-bottom: 1rem; padding-right: 30px; }
+        .modal-title { color: #fbbf24; font-size: 2rem; margin-bottom: 1rem; padding-right: 30px; line-height: 1.2; }
         
         .modal-text { 
             font-size: 1.1rem; 
@@ -273,19 +272,52 @@
             transition: background 0.3s, transform 0.2s;
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
         }
+        .modal-link-btn:hover { background-color: var(--btn-hover); transform: scale(1.05); }
 
-        .modal-link-btn:hover {
-            background-color: var(--btn-hover);
-            transform: scale(1.05);
+        /* =========================================
+           АДАПТИВНОСТЬ (MEDIA QUERIES)
+           ========================================= */
+        
+        @media (max-width: 900px) {
+            h1 { font-size: 3rem; }
+            .grid { grid-template-columns: repeat(2, 1fr); } /* 2 колонки на планшетах */
         }
 
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            h2 { font-size: 1.8rem; }
-            section { padding: 1rem; }
-            .grid { grid-template-columns: 1fr; }
-            .modal-content { padding: 1.5rem; }
-            .modal-link-btn { width: 100%; }
+        @media (max-width: 600px) {
+            /* Отключаем прилипание слайдов на телефоне, чтобы контент не обрезался */
+            .presentation-container {
+                height: auto;
+                overflow-y: visible;
+                scroll-snap-type: none;
+            }
+
+            section {
+                height: auto; /* Высота по контенту */
+                min-height: 100vh; /* Но не меньше экрана */
+                padding: 4rem 1rem; /* Больше отступов */
+                justify-content: flex-start; /* Контент сверху, а не по центру */
+            }
+
+            .grid {
+                grid-template-columns: 1fr; /* 1 колонка */
+                gap: 1.5rem;
+            }
+
+            h1 { font-size: 2.2rem; margin-top: 2rem; }
+            h2 { font-size: 1.8rem; margin-top: 1rem; }
+            
+            .card { padding: 1.5rem; }
+            
+            .modal-content {
+                padding: 1.5rem;
+                width: 95%;
+                max-height: 80vh;
+            }
+            
+            .modal-title { font-size: 1.5rem; }
+            .modal-link-btn { width: 100%; } /* Кнопка на всю ширину */
+            
+            .scroll-indicator { display: none; } /* Скрываем стрелку на моб */
         }
     </style>
 </head>
@@ -415,15 +447,11 @@
     </main>
 
     <script>
-        /* СКРИПТ ПРЕЛОУДЕРА */
         window.addEventListener('load', () => {
-            // Ждем полной загрузки страницы, включая видео и картинки
             const preloader = document.getElementById('preloader');
-            // Добавляем класс, который запускает CSS-анимацию исчезновения
             document.body.classList.add('loaded');
         });
 
-        /* ДАННЫЕ ИНСТРУКЦИЙ */
         const instructions = {
             'chatgpt': {
                 title: 'ChatGPT (OpenAI)',
@@ -467,7 +495,7 @@
             },
             'grok': {
                 title: 'Grok (xAI)',
-                url: 'https://grok.com/',
+                url: 'https://grok.com',
                 text: `
                     <strong>Особенности:</strong><br>
                     ИИ от Илона Маска. Имеет доступ к данным из X (Twitter) в реальном времени.<br><br>
